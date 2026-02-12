@@ -21,7 +21,7 @@ function App() {
   const fetchTickets = async () => {
     try {
       setLoading(true);
-      const response = await fetch('/api/tickets');
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/tickets`);
       const data = await response.json();
       setTickets(data);
       if (data.length > 0 && !selectedTicket) {
