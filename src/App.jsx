@@ -16,6 +16,7 @@ function App() {
 
   useEffect(() => {
     fetchTickets();
+    console.log(import.meta.env.VITE_API_URL);
   }, []);
 
   const fetchTickets = async () => {
