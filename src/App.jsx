@@ -7,6 +7,8 @@ import CreateTicket from './components/CreateTicket/CreateTicket';
 import './styles/App.css';
 
 function App() {
+  const API_URL = import.meta.env.VITE_API_URL;
+
   const [tickets, setTickets] = useState([]);
   const [selectedTicket, setSelectedTicket] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -15,16 +17,22 @@ function App() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   useEffect(() => {
+    if (!API_URL) {
+      console.error("VITE_API_URL is not defined");
+      return;
+    }
+
     fetchTickets();
-    console.log(import.meta.env.VITE_API_URL);
+    console.log("API URL:", API_URL);
   }, []);
 
   const fetchTickets = async () => {
     try {
       setLoading(true);
-      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/tickets`);
+      const response = await fetch(`${API_URL}/api/tickets`);
       const data = await response.json();
       setTickets(data);
+
       if (data.length > 0 && !selectedTicket) {
         setSelectedTicket(data[0]);
       }
@@ -41,11 +49,12 @@ function App() {
 
   const handleCreateTicket = async (ticketData) => {
     try {
-      const response = await fetch('/api/tickets', {
+      const response = await fetch(`${API_URL}/api/tickets`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(ticketData),
       });
+
       const newTicket = await response.json();
       setTickets([newTicket, ...tickets]);
       setSelectedTicket(newTicket);
@@ -58,14 +67,16 @@ function App() {
 
   const handleUpdateTicket = async (ticketId, updates) => {
     try {
-      const response = await fetch(`/api/tickets/${ticketId}`, {
+      const response = await fetch(`${API_URL}/api/tickets/${ticketId}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(updates),
       });
+
       const updatedTicket = await response.json();
-      
+
       setTickets(tickets.map(t => t.id === ticketId ? updatedTicket : t));
+
       if (selectedTicket?.id === ticketId) {
         setSelectedTicket(updatedTicket);
       }
@@ -76,18 +87,18 @@ function App() {
   };
 
   const handleDeleteTicket = async (ticketId) => {
-    if (!confirm('Are you sure you want to delete this ticket?')) {
+    if (!window.confirm('Are you sure you want to delete this ticket?')) {
       return;
     }
 
     try {
-      await fetch(`/api/tickets/${ticketId}`, {
+      await fetch(`${API_URL}/api/tickets/${ticketId}`, {
         method: 'DELETE',
       });
-      
+
       const updatedTickets = tickets.filter(t => t.id !== ticketId);
       setTickets(updatedTickets);
-      
+
       if (selectedTicket?.id === ticketId) {
         setSelectedTicket(updatedTickets[0] || null);
       }
@@ -99,14 +110,16 @@ function App() {
 
   const handleAddReply = async (ticketId, reply) => {
     try {
-      const response = await fetch(`/api/tickets/${ticketId}/replies`, {
+      const response = await fetch(`${API_URL}/api/tickets/${ticketId}/replies`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(reply),
       });
+
       const updatedTicket = await response.json();
-      
+
       setTickets(tickets.map(t => t.id === ticketId ? updatedTicket : t));
+
       if (selectedTicket?.id === ticketId) {
         setSelectedTicket(updatedTicket);
       }
@@ -119,10 +132,11 @@ function App() {
   return (
     <div className="app">
       <Sidebar 
-  isOpen={sidebarOpen} 
-  onClose={() => setSidebarOpen(false)}
-  onToggle={() => setSidebarOpen(!sidebarOpen)}
-/>
+        isOpen={sidebarOpen} 
+        onClose={() => setSidebarOpen(false)}
+        onToggle={() => setSidebarOpen(!sidebarOpen)}
+      />
+
       <div className="main-content">
         <Header 
           onCreateClick={() => setShowCreateModal(true)}
@@ -130,6 +144,7 @@ function App() {
           searchTerm={searchTerm}
           onSearchChange={setSearchTerm}
         />
+
         <div className="content-area">
           <TicketList 
             tickets={tickets} 
@@ -138,6 +153,7 @@ function App() {
             loading={loading}
             searchTerm={searchTerm}
           />
+
           {selectedTicket ? (
             <TicketDetail 
               ticket={selectedTicket}
